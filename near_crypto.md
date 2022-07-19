@@ -42,16 +42,21 @@ The data availability is enforced at consensus level, by forcing validators to c
 
 Near's new random beacon makes use of a VRF to generate randomness that's both unpredictable and unbiasable[[2]](#2). A reliable randomness beacon is an important piece of tool of modern blockchains, and can be used both in the consensus level (e.g. to select validators in an unpredictable way, preventing them to get targeted in advance by malicious actors), or as a tool for higher level applications, for instance as a seed to be used whenever smart contracts require some unbiasable and unpredictable source of randomness.
 
-Their new randomness beacon is based on BLS signatures, and allows any given subset of $k<n$ of $n$ nodes to produce unpredictable and unbiasable randomness without any node set of size $k-1$ being able to learn any information about the randomness beacon.
+Their new randomness beacon is based on BLS signatures, and allows any given subset $k < n$ of $n$ nodes to produce unpredictable and unbiasable randomness without any node set of size $k-1$ being able to learn any information about the randomness beacon.
 In practice, Near choses $k = (2/3) . n$ to increase the difficulty for a subset of malicious and colluding participants to reveal the randomness, as long as at least $1/3^\textrm{rd}$ of the participants are honest.
 Those properties are trivial consequences of the features of BLS signatures and cryptographic pairings, that require a distributed key generation protocol.
-The way this protocol is conducted is worth some note: Near is relying on the linearity of polynomials to aggregate point evaluations of polynomials of degree $k-1$ by each participants into point evaluations of a sum polynomial of degree $k-1$ that the protocol agrees on.
+The way this protocol is conducted is worth some note:
+Near is relying on the linearity of polynomials to aggregate point evaluations of polynomials of degree $k-1$ by each participants into point evaluations of a sum polynomial of degree $k-1$ that the protocol agrees on.
+
 Each validator $v$ generates a secret polynomial $P$ and sends to each other validator $w$ the evaluation of their secret polynomial to a given point $x_w$, encrypted on the elliptic curve: $P(x_w).H$, all encrypted with $w$'s public key so that only the recipient validator can know that point.
 However there is a caveat in that each recipient $w$ of an evaluation at $x_w$ from validator $v$ is responsible for checking its correctness and challenge it within a given time period (half a day, or one epoch) if incorrect.
 This is weaker than if the correctness of the computed point could directly be enforced onchain (see [[2]](#2)).
+
 The distributed key generation protocol is conducted once per epoch and the VRF is jointly evaluated at every block height to generate a random number.
-The process above involves many hash specific hash functions in Near, aside from the SHA2-256 discussed earlier. The group of prime order is the Ristretto255 group, and the Hash-to-point and scalar modulo hashing algorithm are respectively Blake2b with 64 bytes output converted to a point using the Ristretto map, and Blake2b with 32 bytes output modulo the group order.
+The process above involves many specific hash functions in Near, aside from the SHA2-256 discussed earlier.
+The group of prime order is the Ristretto255 group, and the Hash-to-point and scalar modulo hashing algorithm are respectively Blake2b with 64 bytes output converted to a point using the Ristretto map, and Blake2b with 32 bytes output modulo the group order.
 The proof of correctness for polynomials involves another hash function where the input of Blake2b with 32 bytes output is fed to ChaCha20/20 and the output is chunked into 32 bytes blocks that are used to produce k outputs.
+
 There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs, and that there is no well-defined way of converting ED25519 points to Ristretto. The choice they made was just to directly re-interpret the bytes.
 
 # References
