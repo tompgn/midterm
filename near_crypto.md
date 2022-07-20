@@ -26,9 +26,14 @@ It is also an older hash function that doesn't likely provide the same level of 
 
 Cryptographic hashing is at the base of two sets of data structures in Near:
 
-### Merkle Tries
+### Merkle-Patricia Tries
+
+The state of the blockchain, including accounts, code and data for contracts, access keys and receipts, is stored within multiple Merkle Patricia Tries. The merkleized structure ensures that the state cannot be tampered with without changing the root of the tree. The tree roots are included into blocks, enshrining a given representation of the state on which the consensus agreed.
+In practice the state is represented by multiple Merkle tries: one for the transactions for each shard chunk, one for the receipts, one for the headers for each shard chunk and one for the potential onchain challenges against double signing.
 
 ### Hash lists
+
+The chain itself is a hash tree, where each block refers to its parent by including the parent's header hash in its own header. It ensures that an older block cannot be tampered with without invalidating all the subsequent blocks.
 
 Besides those basic primitives that can be found at the foundation of most blockchains, Near uses also a set of bleeding edge primitives.
 
