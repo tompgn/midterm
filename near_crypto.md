@@ -60,7 +60,8 @@ This is weaker than if the correctness of the computed point could directly be e
 The distributed key generation protocol is conducted once per epoch and the VRF is jointly evaluated at every block height to generate a random number.
 The process above involves many specific hash functions in Near, aside from the SHA2-256 discussed earlier.
 The group of prime order is the Ristretto255 group, and the Hash-to-point and scalar modulo hashing algorithm are respectively Blake2b with 64 bytes output converted to a point using the Ristretto map, and Blake2b with 32 bytes output modulo the group order.
-The proof of correctness for polynomials involves another hash function where the input of Blake2b with 32 bytes output is fed to ChaCha20/20 and the output is chunked into 32 bytes blocks that are used to produce k outputs.
+
+The proof of correctness for polynomials involves another hash function where the input of Blake2b with 32 bytes output is fed to ChaCha20/20 and the output is chunked into 32 bytes blocks that are used to produce k outputs. This effectively spreads out the number of bits of randomness, but it may not be a problem since the k outputs are all used to build a single challenge.
 
 There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs, and that there is no well-defined way of converting ED25519 points to Ristretto. The choice they made was just to directly re-interpret the bytes.
 
