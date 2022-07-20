@@ -28,6 +28,8 @@ Cryptographic hashing is at the base of two sets of data structures in Near:
 
 ### Merkle-Patricia Tries
 
+![Merkle Trie](images/mt.png)
+
 The state of the blockchain, including accounts, code and data for contracts, access keys and receipts, is stored within multiple Merkle Patricia Tries. The merkleized structure ensures that the state cannot be tampered with without changing the root of the tree. The tree roots are included into blocks, enshrining a given representation of the state on which the consensus agreed.
 In practice the state is represented by multiple Merkle tries: one for the transactions for each shard chunk, one for the receipts, one for the headers for each shard chunk and one for the potential onchain challenges against double signing.
 
