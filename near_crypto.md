@@ -7,14 +7,14 @@ Since it is computationally infeasible to compute the private key from the publi
 
 ### Accounts
 
-Unlike many other blockchain projects, the accounts are not identified primarily by public key hashes that represent an address. Instead, Near defines the notion of an "account ID" that's a dot-separated, human-readable, string of characters, formatted in a similar way as URLs are. They also follow a hierarchy where postfixes represent a higher domain than prefixes.
+Unlike many other blockchain projects, the accounts are not identified primarily by public key hashes that represent an address. Instead, Near defines the notion of an "account ID" that's a dot-separated, human-readable, string of characters, formatted in a similar way as URLs are. They also follow a hierarchy where postfixes represent a higher domain than prefixes[[1]](#1).
 For instance, the "near" domain is active on the mainnet, and allows for accounts of the type: "alice.near". The owner of a given account ID could then define sub-accounts by prefixing them, e.g. tipping.alice.near could be used by Alice only to tip her friends.
 Human readable accounts are a very nice feature of the protocol that improves usability by hiding addresses and obscure byte strings from users.
 However, it comes with various costs: in particular, there is no direct cryptographic binding between a given public/private keypair and the account ID, without access to onchain data, unlike what's possible with addresses, that can be all derived offchain from a given keypair. Breaking this relationship also breaks the possibility to easily accommodate primitives like hierarchical key derivation schemes.
 Last the main drawback is maybe not so much cryptographic, but social: while it could appear nice to reserve account IDs following a given name on the near domain, the set of name is limited and cannot be re-used, forcing late users to rely on account IDs that - although human-readable - would be harder to relate to a given individual.
 On the contrary, public key hashes are Global and Unique IDs that can then be linked to a human readable identifying string through a registrar. This combines the advantages of both uniqueness with human-readability, even though it forces the user to perform the registration.
 
-Since the link between account IDs and keypairs is defined onchain, rather by cryptographic hashing, it becomes possible to link multiple keypairs to a given account ID[[1]](#1). By default, Near defines a full-access key that can perform any operation on an account, including sending funds. It is possible for users to define one or many so-called "FunctionCall" keys that are registered to perform calls to given functions only, with specific token allowances. This is not dissimilar to the distinction that substrate makes between stash and controller keys, excepted that the FunctionCall keys are more specialised hence that many of them can be defined depending on the functions to be called as part of a given users routine and the allowances needed.
+Since the link between account IDs and keypairs is defined onchain, rather by cryptographic hashing, it becomes possible to link multiple keypairs to a given account ID[[2]](#2). By default, Near defines a full-access key that can perform any operation on an account, including sending funds. It is possible for users to define one or many so-called "FunctionCall" keys that are registered to perform calls to given functions only, with specific token allowances. This is not dissimilar to the distinction that substrate makes between stash and controller keys, excepted that the FunctionCall keys are more specialised hence that many of them can be defined depending on the functions to be called as part of a given users routine and the allowances needed.
 
 ## Hash functions
 
@@ -28,14 +28,19 @@ Cryptographic hashing is at the base of two sets of data structures in Near:
 
 ### Merkle-Patricia Tries
 
-![Merkle Trie](images/mt.png)
-
 The state of the blockchain, including accounts, code and data for contracts, access keys and receipts, is stored within multiple Merkle Patricia Tries. The merkleized structure ensures that the state cannot be tampered with without changing the root of the tree. The tree roots are included into blocks, enshrining a given representation of the state on which the consensus agreed.
-In practice the state is represented by multiple Merkle tries: one for the transactions for each shard chunk, one for the receipts, one for the headers for each shard chunk and one for the potential onchain challenges against double signing.
+
+![Merkle Trie](images/mt.svg)
+
+One of the nice properties of the Merkle tries is that they allow for $log(n)$ sized Merkle proofs (in case the trie is balanced) that a given leaf is present. Near dedicates a specific structure to store those proofs called a __Partial Merkle Tree__.
+
+In practice the state is represented by multiple Merkle tries: one for the previous state root, and one trie of all the previous block hashes up to the current one. In addition, Merkle tries are used to record respectively the hash of the transactions for each shard chunk, the hash of the receipts, the hash of the headers for each shard chunk and the hash of the potential onchain challenges against double signing.
 
 ### Hash lists
 
-The chain itself is a hash tree, where each block refers to its parent by including the parent's header hash in its own header. It ensures that an older block cannot be tampered with without invalidating all the subsequent blocks.
+The chain itself is a hash list, where each block refers to its parent by including the parent's header hash in its own header. It ensures that an older block cannot be tampered with without invalidating all the subsequent blocks.
+
+![Block Chain](images/hl.svg)
 
 Besides those basic primitives that can be found at the foundation of most blockchains, Near uses also a set of bleeding edge primitives.
 
@@ -47,7 +52,7 @@ The data availability is enforced at consensus level, by forcing validators to c
 
 ## Verifiable random functions
 
-Near's new random beacon makes use of a VRF to generate randomness that's both unpredictable and unbiasable[[2]](#2). A reliable randomness beacon is an important piece of tool of modern blockchains, and can be used both in the consensus level (e.g. to select validators in an unpredictable way, preventing them to get targeted in advance by malicious actors), or as a tool for higher level applications, for instance as a seed to be used whenever smart contracts require some unbiasable and unpredictable source of randomness.
+Near's new random beacon makes use of a VRF to generate randomness that's both unpredictable and unbiasable[[3]](#3). A reliable randomness beacon is an important piece of tool of modern blockchains, and can be used both in the consensus level (e.g. to select validators in an unpredictable way, preventing them to get targeted in advance by malicious actors), or as a tool for higher level applications, for instance as a seed to be used whenever smart contracts require some unbiasable and unpredictable source of randomness.
 
 Their new randomness beacon is based on BLS signatures, and allows any given subset $k < n$ of $n$ nodes to produce unpredictable and unbiasable randomness without any node set of size $k-1$ being able to learn any information about the randomness beacon.
 In practice, Near choses $k = (2/3) . n$ to increase the difficulty for a subset of malicious and colluding participants to reveal the randomness, as long as at least $1/3^\textrm{rd}$ of the participants are honest.
@@ -57,7 +62,7 @@ Near is relying on the linearity of polynomials to aggregate point evaluations o
 
 Each validator $v$ generates a secret polynomial $P$ and sends to each other validator $w$ the evaluation of their secret polynomial to a given point $x_w$, encrypted on the elliptic curve: $P(x_w).H$, all encrypted with $w$'s public key so that only the recipient validator can know that point.
 However there is a caveat in that each recipient $w$ of an evaluation at $x_w$ from validator $v$ is responsible for checking its correctness and challenge it within a given time period (half a day, or one epoch) if incorrect.
-This is weaker than if the correctness of the computed point could directly be enforced onchain (see [[2]](#2)).
+This is weaker than if the correctness of the computed point could directly be enforced onchain (see [[3]](#3)).
 
 The distributed key generation protocol is conducted once per epoch and the VRF is jointly evaluated at every block height to generate a random number.
 The process above involves many specific hash functions in Near, aside from the SHA2-256 discussed earlier.
@@ -69,6 +74,8 @@ There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs
 
 # References
 
-<a id="1">[1]</a> https://www.near-sdk.io/zero-to-hero/beginner/logging-in
+<a id="1">[1]</a> https://docs.near.org/concepts/basics/account
 
-<a id="2">[2]</a> https://near.org/blog/randomness-threshold-signatures/
+<a id="2">[2]</a> https://www.near-sdk.io/zero-to-hero/beginner/logging-in
+
+<a id="3">[3]</a> https://near.org/blog/randomness-threshold-signatures/
