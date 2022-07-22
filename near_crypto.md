@@ -32,9 +32,9 @@ The state of the blockchain, including accounts, code and data for contracts, ac
 
 ![Merkle Trie](images/mt.svg)
 
-One of the nice properties of the Merkle tries is that they allow for $log(n)$ sized Merkle proofs (in case the trie is balanced) that a given leaf is present. Near dedicates a specific structure to store those proofs called a __Partial Merkle Tree__.
+One of the nice properties of the Merkle tries is that their root is a compact commitment to all nodes. In particular, they allow for average (in case the trie is balanced) $log(n)$ sized Merkle proofs that any given node is icluded. Near dedicates a specific structure to store those proofs called a __Partial Merkle Tree__, meant to store only the path to the last included element, and updates the proof accordingly on each new insertion.
 
-In practice the state is represented by multiple Merkle tries: one for the previous state root, and one trie of all the previous block hashes up to the current one. In addition, Merkle tries are used to record respectively the hash of the transactions for each shard chunk, the hash of the receipts, the hash of the headers for each shard chunk and the hash of the potential onchain challenges against double signing.
+In practice the state in Near is represented by multiple Merkle tries: one for the previous state root, and one trie of all the previous block hashes up to the current one, and one for the outcome of all transaction and receipts[[3]](#3). In addition, Merkle tries are used to record respectively the hash of the transactions for each shard chunk, the hash of the receipts, the hash of the headers for each shard chunk and the hash of the potential onchain challenges against double signing[[4]](#4).
 
 ### Hash lists
 
@@ -52,7 +52,7 @@ The data availability is enforced at consensus level, by forcing validators to c
 
 ## Verifiable random functions
 
-Near's new random beacon makes use of a VRF to generate randomness that's both unpredictable and unbiasable[[3]](#3). A reliable randomness beacon is an important piece of tool of modern blockchains, and can be used both in the consensus level (e.g. to select validators in an unpredictable way, preventing them to get targeted in advance by malicious actors), or as a tool for higher level applications, for instance as a seed to be used whenever smart contracts require some unbiasable and unpredictable source of randomness.
+Near's new random beacon makes use of a VRF to generate randomness that's both unpredictable and unbiasable[[5]](#5). A reliable randomness beacon is an important piece of tool of modern blockchains, and can be used both in the consensus level (e.g. to select validators in an unpredictable way, preventing them to get targeted in advance by malicious actors), or as a tool for higher level applications, for instance as a seed to be used whenever smart contracts require some unbiasable and unpredictable source of randomness.
 
 Their new randomness beacon is based on BLS signatures, and allows any given subset $k < n$ of $n$ nodes to produce unpredictable and unbiasable randomness without any node set of size $k-1$ being able to learn any information about the randomness beacon.
 In practice, Near choses $k = (2/3) . n$ to increase the difficulty for a subset of malicious and colluding participants to reveal the randomness, as long as at least $1/3^\textrm{rd}$ of the participants are honest.
@@ -62,7 +62,7 @@ Near is relying on the linearity of polynomials to aggregate point evaluations o
 
 Each validator $v$ generates a secret polynomial $P$ and sends to each other validator $w$ the evaluation of their secret polynomial to a given point $x_w$, encrypted on the elliptic curve: $P(x_w).H$, all encrypted with $w$'s public key so that only the recipient validator can know that point.
 However there is a caveat in that each recipient $w$ of an evaluation at $x_w$ from validator $v$ is responsible for checking its correctness and challenge it within a given time period (half a day, or one epoch) if incorrect.
-This is weaker than if the correctness of the computed point could directly be enforced onchain (see [[3]](#3)).
+This is weaker than if the correctness of the computed point could directly be enforced onchain (see [[5]](#5)).
 
 The distributed key generation protocol is conducted once per epoch and the VRF is jointly evaluated at every block height to generate a random number.
 The process above involves many specific hash functions in Near, aside from the SHA2-256 discussed earlier.
@@ -78,4 +78,8 @@ There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs
 
 <a id="2">[2]</a> https://www.near-sdk.io/zero-to-hero/beginner/logging-in
 
-<a id="3">[3]</a> https://near.org/blog/randomness-threshold-signatures/
+<a id="3">[3]</a> https://github.com/near/nearcore/blob/master/core/primitives/src/block_header.rs#L22
+
+<a id="4">[4]</a> https://github.com/near/nearcore/blob/master/core/primitives/src/block_header.rs#L122
+
+<a id="5">[5]</a> https://near.org/blog/randomness-threshold-signatures/
