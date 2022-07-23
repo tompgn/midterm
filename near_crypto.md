@@ -60,6 +60,12 @@ In Near, erasure coding is baked into the consensus itself to enshrine data avai
 The scheme used ensures that only $1/3^\textrm{rd}$ of the validators can reconstruct data for all shards, which remains robust in case $1/3^\textrm{rd}$ of the nodes are split from the network and another $1/3^\textrm{rd}$ is malicious.
 The data availability is enforced at consensus level, by forcing validators to check whether the data is available before they accept a block.
 
+## Signature Agregation: BLS signatures and Multisignatures
+
+In Near, validators sign the blocks but verifying all those signatures would be prohibitively expensive for a node syncing the chain. Instead, __BLS signatures__ are used, and block producers are collecting those signatures and aggregate them using the properties of the BLS signatures. The validator then publishes the aggregated signature together with a Merkle root of the individual signatures organized into a Merkle tree, and signs this using a cheap ECDSA scheme.
+When syncing the chain, participants can then choose to skip the validation of all individual signatures and verify only the ECDSA signature from the validator, relying on the fact that he has neither been challenged and slashed.
+Moreover, in order to ensure compatibility with Ethereum, Near requires at least every block beginning an epoch (and optionally other blocks) to contain a __Schnorr aggregated multisignature__ of all the individual validators signatures. Since the Schnorr aggregation is interactive, it cannot be conducted too frequently, but it allows for efficient validations on other chains like Ethereum, so that a state can be verified full at such "snapshot blocks".
+
 ## Verifiable random functions
 
 Near's new random beacon makes use of a VRF to generate randomness that's both unpredictable and unbiasable[[5]](#5). A reliable randomness beacon is an important piece of tool of modern blockchains, and can be used both in the consensus level (e.g. to select validators in an unpredictable way, preventing them to get targeted in advance by malicious actors), or as a tool for higher level applications, for instance as a seed to be used whenever smart contracts require some unbiasable and unpredictable source of randomness.
@@ -82,10 +88,23 @@ The proof of correctness for polynomials involves another hash function where th
 
 There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs, and that there is no well-defined way of converting ED25519 points to Ristretto. The choice they made was just to directly re-interpret the bytes.
 
-## Succing Non-interactive ARguments of Knowledge.
+## Succing Non-interactive ARguments of Knowledge
 
 The current implementation of Near still relies on fishermen to ensure the security of shards (refer to the description of the consensus). This is a __fraud proof approach__, that is cheap and easy to implement but bears the downside of negatively impacting liveness and speed of the protocol due to the challenge period, as well as introducing the questions about incentivization of the fishermen.
 To address those issues, Near is planning to switch to a __validity proof approach__ where each chunk producer would produce a zero knowledge succint proof attesting of the chunk validatity. This proof would be small and cheap to verify. However, they are still costly to compute so remain untractable in a network that expects a very low block time as Near. With the acceleration of the research and discoveries on new more efficient zkSNARKs, it may become possible for Near to switch in the future, and this is one of the directions they are actively looking at[[6]](#6).
+
+#### What We Like
+
+1. Near uses (or has a roadmap for the use of) a full set of powerful and bleeding edge primitives. This allows them to remain competitive with the best technical projects in the space, even though exotic cryptographic primitives may be a double-edge sword as they are less battle-tested.
+2. Near's use of erasure coding to solve the data availability issue, over the use of some set of notaries that are trusted to keep long term data.
+3. The new randomness beacon based on threshold randomness that allows the protocol to use unbiasable and unpredictable randomness for every validator selection, as opposed to round-robin based mathods that could be biased by non-revealing.
+4. The use of BLS aggregation of the signatures, which is elegant and efficient for a large number of validators. The use of Schnorr to ensure maximal compatibility with popular chains like Ethereum.
+
+#### What We Don't Like
+
+1. Most of the structures rely on SHA2-256 as a hash function, which is older and slower than Blake2b, while Blake is already used by the protocol for Hash-to-point functions in the new randomness beacon implementation.
+2. Unlear path towards the use of zkSNARKs to provide security based on validity proofs as opposed to fraud proofs. The current challenge/response mechanism affects the protocol liveness and can be gamed by using briberies to modify the incentives to report fraud.
+3. At the moment, the protocol is in a phase where some of the design decisions are half baked: the use of BLS aggregation is nice as it would allow for a potentially very large pool of validators to get their signatures aggregated and then validated cheaply. However, with only 100 validators, at the time of writing, it may not really be optimal. Yet if the number of validators increases, the Schnorr interactive aggregation phase may become unpractical on the other hand.
 
 # References
 
@@ -99,4 +118,4 @@ To address those issues, Near is planning to switch to a __validity proof approa
 
 <a id="5">[5]</a> https://near.org/blog/randomness-threshold-signatures/
 
-<a id="6">[6]</a> https://near.org/papers/nightshade/ (section 2.4)
+<a id="6">[6]</a> https://near.org/downloads/Nightshade.pdf (section 2.4)
