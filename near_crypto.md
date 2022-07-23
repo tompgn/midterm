@@ -85,7 +85,7 @@ There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs
 ## Succing Non-interactive ARguments of Knowledge.
 
 The current implementation of Near still relies on fishermen to ensure the security of shards (refer to the description of the consensus). This is a __fraud proof approach__, that is cheap and easy to implement but bears the downside of negatively impacting liveness and speed of the protocol due to the challenge period, as well as introducing the questions about incentivization of the fishermen.
-To address those issues, Near is planning to switch to a __validity proof approach__ where each chunk producer would produce a zero knowledge succint proof attesting of the chunk validatity. This proof would be small and cheap to verify. However, they are still costly to compute so remain untractable in a network that expects a very low block time as Near. With the acceleration of the research and discoveries on new more efficient zkSNARKs, it may become possible for Near to switch in the future, and this is one of the directions they are actively looking at[6]](#6).
+To address those issues, Near is planning to switch to a __validity proof approach__ where each chunk producer would produce a zero knowledge succint proof attesting of the chunk validatity. This proof would be small and cheap to verify. However, they are still costly to compute so remain untractable in a network that expects a very low block time as Near. With the acceleration of the research and discoveries on new more efficient zkSNARKs, it may become possible for Near to switch in the future, and this is one of the directions they are actively looking at[[6]](#6).
 
 # References
 
@@ -99,4 +99,4 @@ To address those issues, Near is planning to switch to a __validity proof approa
 
 <a id="5">[5]</a> https://near.org/blog/randomness-threshold-signatures/
 
-<a id="6">[6]</a> https://near.org/papers/nightshade/ (2.4)
+<a id="6">[6]</a> https://near.org/papers/nightshade/ (section 2.4)
