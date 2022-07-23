@@ -30,7 +30,15 @@ Cryptographic hashing is at the base of two sets of data structures in Near:
 
 The state of the blockchain, including accounts, code and data for contracts, access keys and receipts, is stored within multiple Merkle Patricia Tries. The merkleized structure ensures that the state cannot be tampered with without changing the root of the tree. The tree roots are included into blocks, enshrining a given representation of the state on which the consensus agreed.
 
-![Merkle Trie](images/mt.svg)
+<p align = "center">
+<img src = "images/mt.svg">
+</p>
+<p align = "center"><b>
+The Merkle path for datum #2 consists of the datum node hash (purple) together with the path itself in green and the root.
+</b></p>
+<p align = "center"><b>
+The Merkle proof for datum #2 consists of the datum node hash (purple) together with the path conodes in pink and the root.
+</b></p>
 
 One of the nice properties of the Merkle tries is that their root is a compact commitment to all nodes. In particular, they allow for average (in case the trie is balanced) $log(n)$ sized Merkle proofs that any given node is icluded. Near dedicates a specific structure to store those proofs called a __Partial Merkle Tree__, meant to store only the path to the last included element, and updates the proof accordingly on each new insertion.
 
@@ -40,7 +48,9 @@ In practice the state in Near is represented by multiple Merkle tries: one for t
 
 The chain itself is a hash list, where each block refers to its parent by including the parent's header hash in its own header. It ensures that an older block cannot be tampered with without invalidating all the subsequent blocks.
 
-![Block Chain](images/hl.svg)
+<p align = "center">
+<img src = "images/hl.svg">
+</p>
 
 Besides those basic primitives that can be found at the foundation of most blockchains, Near uses also a set of bleeding edge primitives.
 
@@ -72,6 +82,11 @@ The proof of correctness for polynomials involves another hash function where th
 
 There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs, and that there is no well-defined way of converting ED25519 points to Ristretto. The choice they made was just to directly re-interpret the bytes.
 
+## Succing Non-interactive ARguments of Knowledge.
+
+The current implementation of Near still relies on fishermen to ensure the security of shards (refer to the description of the consensus). This is a __fraud proof approach__, that is cheap and easy to implement but bears the downside of negatively impacting liveness and speed of the protocol due to the challenge period, as well as introducing the questions about incentivization of the fishermen.
+To address those issues, Near is planning to switch to a __validity proof approach__ where each chunk producer would produce a zero knowledge succint proof attesting of the chunk validatity. This proof would be small and cheap to verify. However, they are still costly to compute so remain untractable in a network that expects a very low block time as Near. With the acceleration of the research and discoveries on new more efficient zkSNARKs, it may become possible for Near to switch in the future, and this is one of the directions they are actively looking at[6]](#6).
+
 # References
 
 <a id="1">[1]</a> https://docs.near.org/concepts/basics/account
@@ -83,3 +98,5 @@ There may be an ambiguity introduced by the fact that Near uses ED25519 Keypairs
 <a id="4">[4]</a> https://github.com/near/nearcore/blob/master/core/primitives/src/block_header.rs#L122
 
 <a id="5">[5]</a> https://near.org/blog/randomness-threshold-signatures/
+
+<a id="6">[6]</a> https://near.org/papers/nightshade/ (2.4)
