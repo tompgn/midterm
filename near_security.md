@@ -40,7 +40,9 @@ As previously exposed, the doomslug algorithm is ensuring the chain will go on a
 
 Near is a shared blockchain (although at the time of writing, the network still operates on a single shard, we analyze the situation from a theoretical standpoint following the specifications in the nightshade paper XOX as if multiple shards were in use), so the security guarantees are different.
 Within one shard (defined in Near as a sequence of chunks within the main block), if the majority of the validators gets corrupted, the shard itself can be fully taken over, and validators could endorse an invalid state. Effectively, other validators on other shard are only operating a light-client equivalent verification on the corrupted shard, so they run the risk of getting an inter-shard transactions coming from a corrupted shard, spreading the state corruption to other shards and eventually to the whole network.
-Fishermen are meant to address this problem: by incentivizing them to publish onchain challenges attesting from the invalidity of a given block shard, they allow the state to be reverted to the one just before the shard corruption in case of a successful shard attack on a block. This means that finalization is optimistic, and can theoretically get reverted, (at the cost of $1/3^\textrm{rd}$ of the bonded stake).
+Cross-chain communication security is handled by fishermen, that should be able to detect and produce a proof that a given chunk is invalid. However, most participants don't maintain the state for all shards, so it should be ensured that sufficient information is available to produce such proofs.
+To address this problem, Near limits the cumulative state that a transaction can read or write to a small number of bytes $L_s$ and forces every chunk producer to decompose the execution of transactions into intermediate states that are less than or equal to $L_s$. The fishermen only need to hold $L_s$ bytes of the state from the mismatching state root to produce a challenge.
+In order to provide instant cross-shard (cross-chunk) transactions, Near optimistically allows for receipts to be executed without waiting for the challenge period to expire, at the cost of having to revert the whole block in case the state is declared invalid by a fisherman later.
 
 ## Adaptive corruption
 
@@ -64,7 +66,8 @@ The liveness and security of the protocol can also be badly impacted by the fact
 
 1. Nothing is done to ensure the stakes of the validators are homogenized, leading to as system where the worst case security bound is practically very low even though the total bonded is reasonably high.
 2. The use of round robin for the main block production, allowing for a malicious actor to adaptively bribe, grief, DDos, of more generally attack validators following their turns.
-3. In case a bad block is challenged, the validators would be uncovered till the end of the epoch.
-4. No offline penalties apart from the missing reward.
+3. The fast cross-shard transaction favours liveness over immutability in that if a malicious actor manages to take over a shard and starts to issue a cross-shard transactions, the full block state would be eventually reverted to a past state before the attack if challenged by a fisherman during the challenge period.
+4. In case a bad block is challenged, the validators would be uncovered (the assigment to their chunks would be public) till the end of the epoch.
+5. No offline penalties apart from the missing reward.
 
 <a id="7">[7]</a> Miguel Castro and Barbara Liskov: _Practical Byzantine Fault Tolerance_  https://pmg.csail.mit.edu/papers/osdi99.pdf
