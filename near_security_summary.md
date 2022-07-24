@@ -9,12 +9,12 @@
 
 # Sybil attacks
 
-* _In a pseudonymous system, nothing prevents an adversary to create multiple accounts._
+* _In a pseudonymous environment, nothing prevents an adversary to create multiple accounts._
 * The block production mechanism, in which at least $51\%$ of the block producters need to be honest
 * The finality gadget, which requires a threshold of $2/3^\textrm{rd}$ honest validators to be online.
 * This makes it crucial to prevent a malicious actor to secure many validator slots.
 * Near relies on the fact that a sufficient amount of tokens need to be bounded for a validator to get a slot.
-* If the token maintains sufficient value, it is expensive to create accounts that are funded enough to participate to the protocol.
+* As long as the token maintains sufficient value, it is expensive to create accounts that are funded enough to participate to the protocol.
 
 # $51\%$ Attacks
 
@@ -26,45 +26,43 @@
 ## Finality
 
 * In Near, any attack that takes over the finality mechanism is fatal.
-* Nightshade requires $2/3^\textrm{rd}$ of the validators to be honest to finalize a block. 
-* The theoretical security threshold is half of this since, in case of a perfect network partition of honest validators, $1/3^\textrm{rd}+1$ malicious actors could join any of the two (remaining $1/3^\textrm{rd}$) parts of the segregated honest validator pool and be in a majority there.
+* Nightshade requires $2/3^\textrm{rd}$ of the validators to be honest to finalize a block.
+* The theoretical security threshold is half in case of a network partition of the honest validators (c.f. PBFT).
 * __The theoretical security is then equal to the cost of taking other the $1/3^\textrm{rd}+1$ least bonded validators.__
 
 ## Block production
 
-* Dommslug ensures the chain will go on as long as at least $51\%$ of the validators are online to endorse a block.
-* A block producer controlling less than $51\%$ of the stake would not be allowed to produce blocks that are accepted by other participants.
-* Over $51\%$ of the stake, a malicious block producer could produce an invalid block and get it endorsed, but it would not be sufficient to get it finalized.
+* Doomslug ensures the chain will go on as long as at least $51\%$ of the validators are online to endorse a block.
+* A malicious actor with $51\%$ of the stake, could produce an invalid block and get it endorsed, but it would not be sufficient to get it finalized.
 * Such a block producer would be exposed to fishermen submitting fraud proofs to get him slashed.
 * Before finalization the security level is equal to the stash value of the block producer.
 * After finalization, it is equal to $1/3^\textrm{rd}$ of the stake.
+* The liveness and security of the protocol can also be badly impacted by the fact that there is no punishment for being offline during block production, other than the loss of the block reward.
 
 ## Shard security
 
 * Within one shard, if the majority of the validators gets corrupted, the shard itself can be fully taken over.
 * Validators on other shard are only operating a light-client equivalent verification on the corrupted shard.
-* Through inter-shard transactions from a corrupted shard, the state corruption would spread to other shards and eventually to the whole network.
-* Fishermen are incentivizing to publish onchain challenges attesting from the invalidity of a given block shard.
+* Inter-shard transactions from a corrupted shard are dangerous and propagate state corruption.
+* Fishermen are incentivized to publish onchain challenges attesting from the invalidity of a given block shard.
 * In case of a successful challenge, the state is reverted to the one just before the shard corruption.
 
 ## Adaptive corruption
 
-_The possibility for a malicious party to bribe or corrupt only a specific subset of the actors in order to take over the network, or grief other participants._
-
-* Near is using a randomness beacon to assign validators to shards to make adapting corruption more difficult.
-* It also uses "hidden validators" whose assignment to any given shard is not meant to be released publicly.
-* However, at the full chain level, the block producers are operating in following a round robin
-* This leaves them open to adaptive attacks
+* _The possibility for a malicious party to bribe or corrupt only a specific subset of the actors in order to take over the network, or grief other participants._
+* A randomness beacon to assign validators to shards makes adapting corruption more difficult.
+* "Hidden validators" whose assignment to any given shard is not meant to be released publicly further prevent adaptive behavior.
+* At the main chain level, block producers are operating in following a simple round robin
+* This leaves them open to adaptive attacks!
 * Validators are rotated once every epoch (15 hours), so any block that would be challenged within that period would let the set of validators exposed for the rest of the epoch.
 
 ## More practical considerations
 
 * Near currently operates only on one shard and with 100 validators.
 * Nothing is put in place to ensure that the stake are evenly distributed so there are huge differences between stakes
-* The most bonded validator getting bonded for 25 000 000 Near tokens and the least bonded being worth only 180 000 Near tokens. 
+* The most bonded validator getting bonded for 25 000 000 Near tokens and the least bonded being worth only 180 000 Near tokens.
 * Taking over the least slots relatively cheap if considering the security of a 4B USD network (at the time of writing, the price of the Near token is around 4.2USD)
 * Taking over the last 34% of the validators and being in a theoretically able to take over the whole network requires only 11.5M Near tokens, which is less than 50M USD.
-* The liveness and security of the protocol can also be badly impacted by the fact that there is no punishment for being offline during block production, other than the loss of the block reward.
 
 #### What We Like
 
@@ -78,5 +76,3 @@ _The possibility for a malicious party to bribe or corrupt only a specific subse
 2. The use of round robin for the main block production, allowing for a malicious actor to adaptively bribe, grief, DDos, of more generally attack validators following their turns.
 3. In case a bad block is challenged, the validators would be uncovered till the end of the epoch.
 4. No offline penalties apart from the missing reward.
-
-<a id="7">[7]</a> Miguel Castro and Barbara Liskov: _Practical Byzantine Fault Tolerance_  https://pmg.csail.mit.edu/papers/osdi99.pdf
