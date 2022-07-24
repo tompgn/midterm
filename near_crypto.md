@@ -1,7 +1,7 @@
 ## Digital Signatures
 
 The accounts are protected by the use of digital signatures. Near supports accounts derived from a public/private key scheme based on either curve SECP256K1 or Ed25519 (dalek library).
-The support of SECP256K1 is useful to maintain some compatibility layer with bitcoin/ethereum, but most of the chain operations - such as staking - only support Ed25519 accounts.
+The support of SECP256K1 is useful to maintain some compatibility layer with bitcoin/ethereum, but most of the operational participation to the chain protocol - such as staking - require Ed25519 accounts.
 Those digital signatures are essential for authenticating that the origin of a transaction spending funds or authoring a block, for instance, really is in charge of the account allowed to perfom this transaction, hence in control of the private key.
 Since it is computationally infeasible to compute the private key from the public information (one-wayness), anybody able to sign a transaction with a give account as origin has to be in control of some private key linked to this account.
 
@@ -62,7 +62,7 @@ The data availability is enforced at consensus level, by forcing validators to c
 
 ## Signature Agregation: BLS signatures and Multisignatures
 
-In Near, validators sign the blocks but verifying all those signatures would be prohibitively expensive for a node syncing the chain. Instead, __BLS signatures__ are used, and block producers are collecting those signatures and aggregate them using the properties of the BLS signatures. The validator then publishes the aggregated signature together with a Merkle root of the individual signatures organized into a Merkle tree, and signs this using a cheap ECDSA scheme.
+In Near, validators sign the blocks but verifying all those signatures would be prohibitively expensive for a node syncing the chain. Instead, __BLS signatures__ are used, and block producers are collecting those signatures and aggregate them using the properties of the BLS signatures. The block producer then publishes the aggregated signature together with a Merkle root of the individual signatures organized into a Merkle tree, and signs this using a cheap ECDSA scheme.
 When syncing the chain, participants can then choose to skip the validation of all individual signatures and verify only the ECDSA signature from the validator, relying on the fact that he has neither been challenged and slashed.
 Moreover, in order to ensure compatibility with Ethereum, Near requires at least every block beginning an epoch (and optionally other blocks) to contain a __Schnorr aggregated multisignature__ of all the individual validators signatures. Since the Schnorr aggregation is interactive, it cannot be conducted too frequently, but it allows for efficient validations on other chains like Ethereum, so that a state can be verified full at such "snapshot blocks".
 
